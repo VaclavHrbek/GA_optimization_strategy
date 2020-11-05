@@ -9,17 +9,18 @@
 //Main define
 #define N_GEN 2
 #define N_IND 10
-#define N_EPOCH 10
+#define N_EPOCH 1
 #define POLYNOM 4
+
+//range of random numbers
+#define UPPER 1000
+#define LOWER -1000
 
 //Definition of GA
 //P stands for percentage
+//Sum can't be more than 100
 #define P_CROSS 33
 #define P_MUT 33
-
-
-
-
 
 //Load data define thing function
 #define FILE_NAME "DataValues.csv"
@@ -50,11 +51,9 @@ void loadData(double (*data)[2]){
 }
 
 void createInitialPop(double (*ind_array)[POLYNOM + 1]){
-    int upper = 1000;
-    int lower = -1000;
     for(int i = 0;i < N_IND; i++){
         for(int j = 0; j < POLYNOM; j++){
-            ind_array[i][j] = ((double) (rand() % (upper -  lower +1))+lower);
+            ind_array[i][j] = ((double) (rand() % (UPPER -  LOWER +1))+LOWER);
         }
     }
 }
@@ -148,6 +147,63 @@ void createFile(int *i){
     free(filename);
 }
 
+double randomRange(int lower, int upper){
+    return ((double) (rand() % (upper -  lower +1))+lower);
+}
+
+//Selection by using elitism
+void selection(double (*ind_array)[POLYNOM + 1], double *par1, double *par2){
+
+}
+
+void geneticOperations(double (*ind_array)[POLYNOM + 1], double (*new_array)[POLYNOM + 1]){
+    //Mutation
+    int n_best_m = round(((double)N_IND / 100) * P_MUT);
+    int i;
+    for(i = 0; i < n_best_m; i++){
+        //random number between 0 - POLYNOM
+        int rand = round(randomRange(0, POLYNOM));
+        for(int j = 0; j < POLYNOM + 1 ; j++){
+            new_array[i][j] = ind_array[i][j];
+        }
+        new_array[i][rand] = randomRange(LOWER, UPPER);
+    }
+
+    //Crossover
+    int n_best_c = round(((double)N_IND / 100) * P_CROSS) + n_best_m;
+    int j = 1;
+    int x = 0;
+
+    for(i; i < n_best_c; i++){
+        getchar();
+            if((x+1) == N_IND){
+                x = 0;
+            }
+            int rand = round(randomRange(0, POLYNOM - 1));
+            for(int k = 0; k < POLYNOM; k++){
+                if(k < rand){
+                    new_array[i][k] = ind_array[x][k];
+                }
+                else{
+                    new_array[i][k] = ind_array[x+1][k];
+                }
+            }
+            x++;
+    }
+
+
+
+    //Copy 100 - P_CROSS - P_MUT percentyge to new_array;
+    //int n_best = round(((double)N_IND / 100) * (100 - P_CROSS - P_MUT));
+    /*for(int i = 0; i < n_best; i++){
+
+    }
+    printf("   %d, ",n_best);
+*/
+    //TODO:complete this function.
+    //TODO:complete the copiing to new_array.
+}
+
 void main(){
     srand(time(NULL));
     //Initialize data array
@@ -172,7 +228,7 @@ void main(){
             calculateFitnessFunction(data, ind_array);
             insertionSort(ind_array);
         //  saveBestInd(ind_array[0]);
-            geneticOperations(ind_array, new_array)
+            geneticOperations(ind_array, new_array);
         //  printGeneration(ind_array);
 
 
