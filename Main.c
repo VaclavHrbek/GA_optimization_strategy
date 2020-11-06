@@ -7,9 +7,9 @@
 
 
 //Main define
-#define N_GEN 2
-#define N_IND 10
-#define N_EPOCH 1
+#define N_GEN 1000
+#define N_IND 5000
+#define N_EPOCH 5
 #define POLYNOM 4
 
 //range of random numbers
@@ -19,8 +19,8 @@
 //Definition of GA
 //P stands for percentage
 //Sum can't be more than 100
-#define P_CROSS 33
-#define P_MUT 33
+#define P_CROSS 48
+#define P_MUT 48
 
 //Load data define thing function
 #define FILE_NAME "DataValues.csv"
@@ -40,7 +40,6 @@ void loadData(double (*data)[2]){
     int j = 0;
     while(tok != NULL){
 
-        char *ptr;
         data[i][j] = atof(tok);   //const char to double
         tok = strtok(NULL, COMA);
 
@@ -65,7 +64,7 @@ void calculateFitnessFunction(double (*data)[2], double (*ind_array)[POLYNOM + 1
         for (int j = 0; j < NUM_ROWS; j++){
             double out_polyn = 0;
             for (int k = 0; k < POLYNOM; k++){
-                int pol = POLYNOM;
+
                 out_polyn += (ind_array[i][k]*(pow(data[j][0], ((double)(POLYNOM-(k+1))))));
             }
 
@@ -123,14 +122,30 @@ void insertionSort(double (*array)[POLYNOM + 1]){
     }
 }
 
-void saveBestInd(double *array){
+void saveBestInd(double *array, int *i){
+    FILE * fp;
 
-    for(int i = 0; i < 5; i ++){
-        printf("%f, ", array[i]);
-        //TODO: finish best to the created file;
-        //name of file is Epochs_num_
-        //first finish createFile function
+    char num[N_EPOCH];
+    sprintf(num,"%d",(*i+1));
+
+    char *filename = (char *) malloc(1 + strlen("Epochs_num_")+ strlen(num) + strlen(".csv"));
+    strcpy(filename,"Epochs_num_");
+    strcat(filename, num);
+    strcat(filename, ".csv");
+
+    fp = fopen(filename, "a");
+
+    if(fp == NULL){
+        printf("Unable to open file!!!!!\n");
+        exit(EXIT_FAILURE);
     }
+
+
+    fprintf(fp,"\n%f, %f, %f, %f, %f", array[0], array[1],array[2],array[3],array[4]);
+    fclose(fp);
+    free(filename);
+
+
 }
 
 void createFile(int *i){
@@ -138,22 +153,27 @@ void createFile(int *i){
     char num[N_EPOCH];
     sprintf(num,"%d",(*i+1));
 
-    char *filename = (char *) malloc(1 + strlen("Epochs_num_")+ strlen(num));
+    char *filename = (char *) malloc(1 + strlen("Epochs_num_")+ strlen(num)+ strlen(".csv"));
     strcpy(filename,"Epochs_num_");
     strcat(filename, num);
+    strcat(filename, ".csv");
 
-    //TODO: create file
 
+    FILE *fp;
+    fp = fopen(filename, "w");
+    if(fp == NULL){
+        printf("Unable to create file!!!!!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(fp,"%s, %s, %s, %s, %s","x^3", "x^2", "x","  ", "fitness");
+
+    fclose(fp);
     free(filename);
 }
 
 double randomRange(int lower, int upper){
     return ((double) (rand() % (upper -  lower +1))+lower);
-}
-
-//Selection by using elitism
-void selection(double (*ind_array)[POLYNOM + 1], double *par1, double *par2){
-
 }
 
 void geneticOperations(double (*ind_array)[POLYNOM + 1], double (*new_array)[POLYNOM + 1]){
@@ -163,7 +183,7 @@ void geneticOperations(double (*ind_array)[POLYNOM + 1], double (*new_array)[POL
     for(i = 0; i < n_best_m; i++){
         //random number between 0 - POLYNOM
         int rand = round(randomRange(0, POLYNOM));
-        for(int j = 0; j < POLYNOM + 1 ; j++){
+        for(int j = 0; j < POLYNOM; j++){
             new_array[i][j] = ind_array[i][j];
         }
         new_array[i][rand] = randomRange(LOWER, UPPER);
@@ -171,12 +191,10 @@ void geneticOperations(double (*ind_array)[POLYNOM + 1], double (*new_array)[POL
 
     //Crossover
     int n_best_c = round(((double)N_IND / 100) * P_CROSS) + n_best_m;
-    int j = 1;
     int x = 0;
 
     for(i; i < n_best_c; i++){
-        getchar();
-            if((x+1) == N_IND){
+            if((x+1) >= N_IND){
                 x = 0;
             }
             int rand = round(randomRange(0, POLYNOM - 1));
@@ -188,24 +206,58 @@ void geneticOperations(double (*ind_array)[POLYNOM + 1], double (*new_array)[POL
                     new_array[i][k] = ind_array[x+1][k];
                 }
             }
-            x++;
+            x = x + 2;
     }
 
-
-
-    //Copy 100 - P_CROSS - P_MUT percentyge to new_array;
-    //int n_best = round(((double)N_IND / 100) * (100 - P_CROSS - P_MUT));
-    /*for(int i = 0; i < n_best; i++){
-
+    //fill in the rest of the population
+    int j = 0;
+    for(i; i < N_IND; i++){
+        for(int k = 0; k < POLYNOM; k++){
+                    new_array[i][k] = ind_array[j][k];
+        }
+        j++;
     }
-    printf("   %d, ",n_best);
-*/
-    //TODO:complete this function.
-    //TODO:complete the copiing to new_array.
+
 }
 
-void main(){
-    srand(time(NULL));
+void copyArrayToArray(double (*array_1)[POLYNOM + 1], double (*array_2)[POLYNOM + 1]){
+    for(int i = 0; i < N_IND; i++){
+        for(int j = 0; j < POLYNOM; j++){
+            array_2[i][j] = array_1[i][j];
+        }
+    }
+}
+
+int main(){
+/*    double data[NUM_ROWS][NUM_COLUMS];
+    double ind_array[5][5];
+    loadData(data);
+
+    ind_array[0][0] = 2;
+    ind_array[0][1] =  5;
+    ind_array[0][2] =  0;
+    ind_array[0][3] =  3;
+    ind_array[0][4] =  0;
+    for(int j = 0; j < NUM_ROWS; j++){
+        printf(" %f\n", data[j][0]);
+
+    }
+    for(int j = 0; j < 5; j++){
+        printf(" %f ", ind_array[0][j]);
+
+    }
+    printf("\n");
+    calculateFitnessFunction(data, ind_array);
+    for(int j = 0; j < 5; j++){
+        printf(" %f ", ind_array[0][j]);
+
+    }
+
+
+return 0;*/
+    time_t start, end;
+    time(&start);
+   srand(time(NULL));
     //Initialize data array
     double data[NUM_ROWS][NUM_COLUMS];
 
@@ -227,16 +279,22 @@ void main(){
         for(int j = 0; j< N_GEN; j++){
             calculateFitnessFunction(data, ind_array);
             insertionSort(ind_array);
-        //  saveBestInd(ind_array[0]);
+            saveBestInd(ind_array[0], &i);
+
+        //    printGeneration(ind_array);
             geneticOperations(ind_array, new_array);
-        //  printGeneration(ind_array);
+        //    printGeneration(new_array);
+            copyArrayToArray(new_array, ind_array);
 
-
-            printf("____end of generation___\n");
+            printf("____end of generation___%d\n", j);
         }
 
         ind_array[0][0] = 0;
-        printf("____end of epoch____\n");
+        printf("----#####-----#####-----#####------\n");
+        printf("____end of epoch____%d\n", i);
+        printf("----#####-----#####-----#####------\n");
     }
-
+    time(&end);
+    printf("\nExecution time was %jd s", (end - start));
+return 0;
 }
