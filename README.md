@@ -1,5 +1,5 @@
 # GA_GPU_CUDA
-Genetic algorithm for regresion using CUDA toolkit 
+Genetic algorithm for regresion 
 
 This repository is for learning purpose. 
 
