@@ -1,5 +1,5 @@
-# GA_GPU_CUDA
-Genetic algorithm for regresion 
+# GA
+Optimization strategy for regression inspired by genetic algorithm
 
 This repository is for learning purpose. 
 
